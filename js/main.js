@@ -20,17 +20,31 @@ const BASE_H = 1280;
 
 const appEl = document.getElementById("app");
 
+// Широкий экран (фрейм 16:9, 4:3, 3:2, монитор): высота раскладки — столько единиц, ширина — сколько влезет.
+// Игровые экраны раскладываются в две колонки (панель слева, поле справа), меню — колонкой по центру.
+const LANDSCAPE_H = 960;
+
 function layout() {
 	const vw = window.innerWidth;
 	const vh = window.innerHeight;
-	// На широком экране — колонка с пропорциями телефона; на телефоне — вся ширина.
-	const width = Math.min(vw, vh * (BASE_W / BASE_H) * 1.0);
-	const scale = width / BASE_W;
+	const landscape = vw >= vh;
+	let scale;
+	if (landscape) {
+		scale = vh / LANDSCAPE_H;
+		appEl.style.width = vw / scale + "px";
+		appEl.style.height = LANDSCAPE_H + "px";
+		appEl.style.left = "0px";
+	} else {
+		// Узкий экран: колонка с пропорциями телефона, на телефоне — вся ширина.
+		const width = Math.min(vw, vh * (BASE_W / BASE_H));
+		scale = width / BASE_W;
+		appEl.style.width = BASE_W + "px";
+		appEl.style.height = vh / scale + "px";
+		appEl.style.left = (vw - width) / 2 + "px";
+	}
 	window.__uiScale = scale;
-	appEl.style.width = BASE_W + "px";
-	appEl.style.height = vh / scale + "px";
 	appEl.style.transform = `scale(${scale})`;
-	appEl.style.left = (vw - width) / 2 + "px";
+	appEl.classList.toggle("landscape", landscape);
 	// Вырез камеры и полоса жестов: отступы env(safe-area-inset-*) в пикселях раскладки.
 	const probe = getComputedStyle(document.getElementById("safe-probe"));
 	for (const side of ["top", "bottom", "left", "right"]) {

@@ -59,6 +59,7 @@ export class BoardScreen {
 
 	buildFrame() {
 		const root = screenRoot(this.el, 20, 14);
+		root.classList.add("board-root");
 		const top = h("div", "top-bar");
 		top.append(roundButton(Icon.PAUSE, () => this.openPause()));
 		this.titleLabel = displayLabel("", 56);

@@ -1082,3 +1082,63 @@ canvas {
 .rules .rules-head:first-child {
 	margin-top: 0;
 }
+
+/* --- Широкий экран: фрейм 16:9 / 4:3 / 3:2, монитор --- */
+
+/* Меню и разделы — колонкой 720 по центру. */
+.landscape .screen-root {
+	width: 720px;
+	align-self: center;
+}
+
+/* Игра: панель слева (шапка, карточка, лоток), поле справа на всю высоту. */
+.landscape .screen-root.board-root {
+	width: auto;
+	align-self: stretch;
+	display: grid;
+	grid-template-columns: 540px 1fr;
+	grid-template-rows: auto auto 1fr auto;
+	column-gap: 24px;
+	row-gap: 20px;
+}
+
+.landscape .board-root > .top-bar {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.landscape .board-root > .stat-card {
+	grid-column: 1;
+	grid-row: 2;
+}
+
+.landscape .board-root > .board-view {
+	grid-column: 2;
+	grid-row: 1 / -1;
+}
+
+.landscape .board-root > .tray {
+	grid-column: 1;
+	grid-row: 4;
+}
+
+/* Высота 960: меню и обучение чуть компактнее. */
+.landscape .menu-title .display {
+	font-size: 88px;
+}
+
+.landscape .menu .board-view {
+	height: 196px !important;
+}
+
+.landscape .tutorial > .board-view {
+	min-height: 200px !important;
+}
+
+.landscape .hint {
+	min-height: 0;
+}
+
+.landscape .status {
+	min-height: 40px;
+}

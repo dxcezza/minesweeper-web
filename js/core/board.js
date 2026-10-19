@@ -385,11 +385,16 @@ export class Board extends Emitter {
 		this.mineCount--;
 		for (const nb of this._neighbors[i]) this.counts[nb]--;
 		this.emit("mineDefused", i);
-		const seeds = [i];
+		const seeds = new Set([i]);
 		for (const nb of this._neighbors[i]) {
-			if (this.state[nb] === State.HIDDEN && this.mines[nb] === 0) seeds.push(nb);
+			if (this.state[nb] === State.HIDDEN && this.mines[nb] === 0) seeds.add(nb);
+			// Открытая цифра стала нулём: её закрытые соседи теперь заведомо без мин и должны открыться,
+			// иначе пустая клетка граничит с закрытыми.
+			if (this.state[nb] === State.REVEALED && this.counts[nb] === 0) {
+				for (const nb2 of this._neighbors[nb]) if (this.state[nb2] === State.HIDDEN) seeds.add(nb2);
+			}
 		}
-		this._open(seeds);
+		this._open([...seeds]);
 	}
 
 	_explode(i) {

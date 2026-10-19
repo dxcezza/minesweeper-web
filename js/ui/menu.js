@@ -2,6 +2,7 @@
 import { h, label, displayLabel, blockTitle, modeCard, roundButton, screenRoot, Icon } from "./widgets.js";
 import { BoardView } from "../boardview.js";
 import { Save } from "../save.js";
+import { Player } from "../player.js";
 import { Difficulty } from "../core/config.js";
 import { Pal } from "../palette.js";
 import { fmtInt, fmtTime } from "../format.js";
@@ -29,6 +30,12 @@ export class MainMenu {
 		const tag = label("Пять полей на время или одно — на скорость.", 26, pal.muted, "center", 400);
 		tag.classList.add("wrap");
 		root.append(tag);
+		// Ник с сайта, на котором встроена игра.
+		this.playerLabel = label("", 24, pal.accent2, "center", 600);
+		root.append(this.playerLabel);
+		this._onPlayer = () => this.showPlayer();
+		Player.on("changed", this._onPlayer);
+		this.showPlayer();
 
 		this.preview = new BoardView({ interactive: false });
 		this.preview.el.style.height = "280px";
@@ -57,7 +64,13 @@ export class MainMenu {
 		root.append(links);
 	}
 
+	showPlayer() {
+		this.playerLabel.textContent = Player.known() ? `Играет ${Save.playerName()}` : "";
+		this.playerLabel.style.display = Player.known() ? "" : "none";
+	}
+
 	destroy() {
 		this.preview.destroy();
+		Player.off("changed", this._onPlayer);
 	}
 }

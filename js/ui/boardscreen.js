@@ -328,6 +328,12 @@ export class BoardScreen {
 
 	// Строка «Имя» для попавшего в таблицу результата.
 	addNameRow(o) {
+		// Ник пришёл с сайта — вводить имя не нужно.
+		if (!Save.canRename()) {
+			this.nameEdit = null;
+			o.addText(`Игрок: ${Save.playerName()}`, 26, Pal.current.muted);
+			return;
+		}
 		const input = h("input", "name-edit");
 		input.type = "text";
 		input.maxLength = MAX_NAME_LENGTH;

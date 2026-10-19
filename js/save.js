@@ -1,13 +1,14 @@
 // Рекорды, статистика и настройки в localStorage браузера.
 import { Emitter } from "./core/emitter.js";
 import { Difficulty } from "./core/config.js";
+import { Player } from "./player.js";
 
 const KEY_LEADERBOARD = "spleen.leaderboard";
 const KEY_CLASSIC = "spleen.classic";
 const KEY_SETTINGS = "spleen.settings";
 const FORMAT_VERSION = 1;
 
-export const MAX_NAME_LENGTH = 16;
+export const MAX_NAME_LENGTH = 24;
 export const LEADERBOARD_MAX = 20;
 export const CLASSIC_MAX = 10;
 
@@ -118,6 +119,7 @@ class SaveService extends Emitter {
 					duration: Number(d.duration) | 0,
 					date: String(d.date ?? ""),
 					seed: Number(d.seed) | 0,
+					player: String(d.player ?? ""),
 				});
 			}
 			this.leaderboard.sort(betterRun);
@@ -136,7 +138,7 @@ class SaveService extends Emitter {
 				if (!Array.isArray(list)) continue;
 				const clean = list
 					.filter((e) => e && typeof e === "object" && "time" in e)
-					.map((e) => ({ id: String(e.id ?? newId("c")), name: sanitizeName(e.name), time: Math.max(0, Number(e.time) | 0), date: String(e.date ?? "") }))
+					.map((e) => ({ id: String(e.id ?? newId("c")), name: sanitizeName(e.name), time: Math.max(0, Number(e.time) | 0), date: String(e.date ?? ""), player: String(e.player ?? "") }))
 					.sort(betterTime)
 					.slice(0, CLASSIC_MAX);
 				this.classicTables[key] = clean;
@@ -182,7 +184,8 @@ class SaveService extends Emitter {
 	submitResult(result) {
 		const entry = {
 			id: newId(),
-			name: sanitizeName(this.settings.last_name),
+			name: this.playerName(),
+			player: Player.id,
 			score: result.score | 0,
 			won: !!result.won,
 			stages: result.stages | 0,
@@ -232,7 +235,7 @@ class SaveService extends Emitter {
 	submitClassic(difficulty, noGuess, won, seconds, ranked = true) {
 		const key = Difficulty.recordKey(difficulty, noGuess);
 		const prevBest = this.bestTime(key);
-		const entry = { id: newId("c"), name: sanitizeName(this.settings.last_name), time: Math.max(0, seconds), date: nowString() };
+		const entry = { id: newId("c"), name: this.playerName(), time: Math.max(0, seconds), date: nowString(), player: Player.id };
 		const st = this.classicStatsFor(key);
 		st.games++;
 		if (won) {
@@ -261,7 +264,19 @@ class SaveService extends Emitter {
 		this.emit("classicChanged");
 	}
 
+	// Имя для таблицы: ник с сайта, если игрок известен, иначе введённое вручную.
+	playerName() {
+		if (Player.known()) return sanitizeName(Player.name || `Игрок ${Player.id}`);
+		return sanitizeName(this.settings.last_name);
+	}
+
+	// Имя нельзя менять, если его сообщил сайт.
+	canRename() {
+		return !Player.known();
+	}
+
 	renameEntry(id, newName) {
+		if (!this.canRename()) return;
 		const clean = sanitizeName(newName);
 		if (this.settings.last_name !== clean) this.setSetting("last_name", clean);
 		const run = this.leaderboard.find((e) => e.id === id);

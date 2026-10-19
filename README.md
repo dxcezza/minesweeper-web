@@ -34,4 +34,36 @@ python -m http.server 8000
 Раскладка рассчитана на ширину 720 и масштабируется под экран целиком (`#app` в `js/main.js`).
 Звуки и музыка — `assets/sfx`, `assets/music` (mp3), шрифт — Oswald (SIL OFL, `assets/fonts`).
 
+## Встраивание на huevo.su
+
+Игра встраивается фреймом и записывает в таблицу рекордов ник игрока с сайта. Рекорды хранятся в браузере игрока (`localStorage`), у каждой записи — ник и id пользователя сайта. Если сайт ничего не передал, игра работает как обычно: имя вводится вручную.
+
+Сайт может передать пользователя одним из двух способов (или обоими):
+
+**1. Параметры адреса фрейма** — проще всего:
+
+```html
+<iframe src="https://dxcezza.github.io/minesweeper-web/?user_id=123&username=vasya"
+        width="420" height="740" allow="fullscreen; autoplay" style="border:0"></iframe>
+```
+
+**2. Сообщение из страницы сайта.** После загрузки игра отправляет родителю `{type: "spleen:ready"}`; в ответ (или в любой момент позже) сайт присылает пользователя:
+
+```js
+const frame = document.querySelector("iframe");
+window.addEventListener("message", (e) => {
+	if (e.source === frame.contentWindow && e.data?.type === "spleen:ready") {
+		frame.contentWindow.postMessage({ type: "huevo:user", user: { id: 123, username: "vasya" } }, "https://dxcezza.github.io");
+	}
+});
+```
+
+Сообщения принимаются только со страниц `huevo.su` и его поддоменов (`TRUSTED_HOSTS` в `js/player.js`). Поля можно называть по-разному: id — `id`, `user_id`, `userId`, `uid`; ник — `username`, `name`, `login`, `nickname`, `display_name`. Сообщение может быть объектом или JSON-строкой, пользователь — в `user`, `data.user`, `data` или в корне.
+
+Ограничения: браузер хранит данные фрейма отдельно для каждого сайта, на котором он встроен, поэтому рекорды на huevo.su и при прямом заходе на игру — разные. Safari может очищать хранилище фреймов чужих сайтов.
+
+Проверка локально: `embed-test.html` — страница с фреймом игры, которая передаёт ник так же, как это сделал бы сайт (работает только на `localhost` / `127.0.0.1`).
+
+## Выкладка
+
 Выкладка — GitHub Pages из ветки `main`: достаточно запушить изменения.

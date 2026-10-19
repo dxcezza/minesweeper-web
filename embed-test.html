@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Проверка встраивания</title>
+	<style>
+		:root { color-scheme: dark; }
+		body { margin: 0; padding: 16px; font: 16px sans-serif; background: #222; color: #eee; }
+		iframe { display: block; width: min(100%, 420px); height: 740px; border: 0; margin-top: 12px; }
+		input, button { font: inherit; }
+	</style>
+</head>
+<body>
+	<!-- Так игру может встроить huevo.su: фрейм + сообщение с пользователем в ответ на spleen:ready. -->
+	<label>Ник: <input id="name" value="vasya"></label>
+	<label>id: <input id="uid" value="42" size="6"></label>
+	<button id="send">Отправить в игру</button>
+	<iframe id="game" src="./" allow="fullscreen; autoplay"></iframe>
+	<script>
+		const frame = document.getElementById("game");
+		const send = () => frame.contentWindow.postMessage(
+			{ type: "huevo:user", user: { id: document.getElementById("uid").value, username: document.getElementById("name").value } }, "*");
+		window.addEventListener("message", (e) => {
+			if (e.source === frame.contentWindow && e.data && e.data.type === "spleen:ready") send();
+		});
+		document.getElementById("send").addEventListener("click", send);
+	</script>
+</body>
+</html>
